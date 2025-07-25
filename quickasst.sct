@@ -1,12 +1,12 @@
 <?XML version="1.0"?>
 <scriptlet>
   <registration
-    progid="HelloWorld.SCT"
-    classid="{11111111-1111-1111-1111-111111111111}">
+    progid="PopupDemo.SCT"
+    classid="{22222222-2222-2222-2222-222222222222}">
     <script language="JScript">
       <![CDATA[
         var shell = new ActiveXObject("WScript.Shell");
-        shell.Run("powershell.exe -WindowStyle Hidden -Command \"[System.Windows.Forms.MessageBox]::Show('Hello from PowerShell!', 'SCT Demo')\"");
+        shell.Popup("Hello from SCT Popup!", 5, "SCT Demo", 64);
       ]]>
     </script>
   </registration>
